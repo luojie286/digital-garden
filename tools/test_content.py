@@ -5,11 +5,29 @@ from pathlib import Path
 from unittest.mock import patch
 
 import learning_content as content
-from build_site import local_images, DIST, require_learning_notes
+from build_site import local_images, DIST, require_learning_notes, fingerprint_page_assets
 from rebuild_content import ROOT
 
 
 class NoteDiscoveryTests(unittest.TestCase):
+    def test_published_script_versions_change_with_their_content(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dist = Path(tmp)
+            (dist / "blog").mkdir()
+            (dist / "js").mkdir()
+            data = dist / "js/learning-data.js"
+            data.write_text("var learningNotes = [];", encoding="utf-8")
+            for page, source in [(dist / "index.html", "js/learning-data.js"), (dist / "blog/index.html", "../js/learning-data.js")]:
+                page.write_text(f'<script src="{source}"></script>', encoding="utf-8")
+            with patch("build_site.DIST", dist):
+                fingerprint_page_assets()
+                first = (dist / "index.html").read_text(encoding="utf-8")
+                self.assertRegex(first, r'learning-data\.js\?v=[0-9a-f]{12}')
+                self.assertIn("../js/learning-data.js?v=", (dist / "blog/index.html").read_text(encoding="utf-8"))
+                data.write_text("var learningNotes = [{title: 'new'}];", encoding="utf-8")
+                fingerprint_page_assets()
+                self.assertNotEqual(first, (dist / "index.html").read_text(encoding="utf-8"))
+
     def test_missing_learning_checkout_blocks_publication(self):
         with patch("build_site.collect_notes", return_value=([], [])):
             with self.assertRaisesRegex(RuntimeError, "git submodule update"):

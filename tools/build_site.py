@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import hashlib
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -48,6 +49,25 @@ def require_learning_notes() -> list[dict]:
     return notes
 
 
+def fingerprint_page_assets() -> None:
+    """A changed index must not reuse the browser's cached, previous index."""
+    for page in DIST.rglob("*.html"):
+        def stamp(match: re.Match) -> str:
+            prefix, reference, suffix = match.groups()
+            url = urlsplit(reference)
+            if url.scheme or url.netloc:
+                return match.group(0)
+            asset = (page.parent / unquote(url.path)).resolve()
+            if not asset.is_relative_to(DIST.resolve()) or not asset.is_file():
+                return match.group(0)
+            version = hashlib.sha256(asset.read_bytes()).hexdigest()[:12]
+            return f"{prefix}{url.path}?v={version}{suffix}"
+
+        html = page.read_text(encoding="utf-8")
+        html = re.sub(r'(<script\b[^>]*\bsrc=["\'])([^"\']+)(["\'])', stamp, html)
+        page.write_text(html, encoding="utf-8")
+
+
 def build() -> None:
     notes = require_learning_notes()
     rebuild()
@@ -69,6 +89,7 @@ def build() -> None:
         copy_public(path)
         for image in local_images(path):
             copy_public(image)
+    fingerprint_page_assets()
     (DIST / ".nojekyll").touch()
     files = list(DIST.rglob("*"))
     size = sum(p.stat().st_size for p in files if p.is_file()) / 1024 / 1024
