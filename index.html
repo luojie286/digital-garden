@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <title>My Digital Garden — 个人博客</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260715g">
+</head>
+<body>
+  <div class="bg-layer" id="bg-layer">
+    <div class="bg-overlay"></div>
+    <div class="bg-gradient"></div>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+  </div>
+
+  <header class="navbar" id="navbar"></header>
+
+  <main class="page">
+    <div id="global-search"></div>
+
+    <div class="home-grid">
+      <!-- 第一行：个人卡片 + 云音乐播放器 -->
+      <div class="grid-row grid-row-1">
+        <a href="about.html" class="glass-card profile-card">
+          <div class="profile-top">
+            <div class="avatar-wrap">
+              <img id="avatar" src="" alt="头像">
+            </div>
+            <div>
+              <h1 class="profile-name" id="author-name"></h1>
+              <p class="profile-bio" id="author-bio"></p>
+            </div>
+          </div>
+          <div class="profile-bottom">
+            <div class="stats">
+              <div class="stat-item">
+                <div class="stat-num" id="stat-learning">0</div>
+                <div class="stat-label">学习笔记</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-num" id="stat-fiction">0</div>
+                <div class="stat-label">创作</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-num" id="stat-anime">0</div>
+                <div class="stat-label">动漫</div>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <div class="stat-num" id="stat-gallery">0</div>
+                <div class="stat-label">画作</div>
+              </div>
+            </div>
+          </div>
+        </a>
+
+        <div id="cloud-player" class="glass-card cloud-player"></div>
+      </div>
+
+      <section id="home-learning" aria-label="学习笔记"></section>
+
+      <!-- 第二行：轮播 + 特色区 -->
+      <div class="grid-row grid-row-2">
+        <div class="glass-card carousel" id="carousel-tech"></div>
+
+        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+          <a href="gallery.html" class="glass-card feature-card">
+            <img id="gallery-preview" src="" alt="画作收藏">
+            <div class="feature-card-text">
+              <h3>画作收藏</h3>
+              <p>收藏的插画、壁纸与摄影作品</p>
+            </div>
+          </a>
+
+          <div class="grid-row-2-inner">
+            <div class="glass-card carousel" id="carousel-fiction" style="min-height:220px;"></div>
+            <div class="glass-card theme-toggle-block" onclick="toggleTheme()">
+              <div class="theme-orbit">
+                <div class="theme-sky"></div>
+                <div class="theme-night"></div>
+                <span class="theme-emoji day">🌸</span>
+                <span class="theme-emoji night">✨</span>
+              </div>
+              <h3 class="theme-toggle-title">日间模式</h3>
+              <p class="theme-toggle-sub">落樱漫舞的清晨</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部仪表盘 -->
+      <div class="glass-card dashboard" id="dashboard"></div>
+    </div>
+  </main>
+
+  <script src="js/site-data.js"></script>
+  <script src="js/learning-data.js"></script>
+  <script src="js/posts-data.js?v=20260715f"></script>
+  <script src="js/gallery-data.js"></script>
+  <script src="js/music-data.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/music.js?v=20260715e"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/learning.js"></script>
+  <script src="js/router.js?v=20260715f"></script>
+</body>
+</html>

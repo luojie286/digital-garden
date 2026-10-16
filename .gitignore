@@ -1,0 +1,21 @@
+dist/
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+.workbuddy/
+**/.workbuddy/
+.env
+.env.*
+*.exe
+*.msi
+*.zip
+*.rar
+*.7z
+*.class
+**/target/
+**/node_modules/
+# 课程工程与运行配置留在本机；网站只发布笔记及其引用图片。
+learning/**/资料/
+learning/java练习/
+learning/**/jwt.txt

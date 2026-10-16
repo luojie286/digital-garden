@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <title>音乐收藏 — My Digital Garden</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=20260715g">
+  <style>
+    /* 左右边框同高对齐；多出的歌在右侧内部滚动 */
+    @media (min-width: 768px) {
+      .music-page-layout { align-items: stretch !important; }
+      .music-console,
+      .music-panel {
+        height: 38rem !important;
+        max-height: 38rem !important;
+        min-height: 38rem !important;
+      }
+      .music-console { justify-content: center !important; }
+      .music-panel { overflow: hidden !important; display: flex !important; flex-direction: column !important; }
+      #music-playlist {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="music-bg-blur" id="music-bg-blur"></div>
+
+  <div class="bg-layer" id="bg-layer">
+    <div class="bg-overlay"></div>
+    <div class="bg-gradient"></div>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+  </div>
+
+  <header class="navbar" id="navbar"></header>
+
+  <main class="page" style="padding-bottom:3rem;">
+    <div class="page-header">
+      <h1 class="page-title">我的音乐</h1>
+      <p class="page-desc">收藏的歌单</p>
+    </div>
+
+    <div class="music-page-layout" id="music-page"></div>
+  </main>
+
+  <script src="js/site-data.js"></script>
+  <script src="js/learning-data.js"></script>
+  <script src="js/posts-data.js?v=20260715f"></script>
+  <script src="js/gallery-data.js"></script>
+  <script src="js/music-data.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/music.js?v=20260715e"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/learning.js"></script>
+  <script src="js/router.js?v=20260715f"></script>
+</body>
+</html>
