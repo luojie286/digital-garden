@@ -38,8 +38,8 @@ def modification_date(path: Path) -> str:
     # Git history is stable on CI; checkout mtime is not an update date.
     try:
         result = subprocess.run(
-            ["git", "log", "-1", "--format=%cs", "--", path.relative_to(ROOT).as_posix()],
-            cwd=ROOT, capture_output=True, text=True, check=False,
+            ["git", "log", "-1", "--format=%cs", "--", path.name],
+            cwd=path.parent, capture_output=True, text=True, check=False,
         )
         value = result.stdout.strip()
         if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):

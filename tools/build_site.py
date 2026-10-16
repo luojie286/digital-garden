@@ -38,7 +38,18 @@ def local_images(path: Path) -> list[Path]:
     return images
 
 
+def require_learning_notes() -> list[dict]:
+    notes, _ = collect_notes()
+    if not notes:
+        raise RuntimeError(
+            "No learning notes found. Initialize the learning repository with "
+            "'git submodule update --init --recursive' before building."
+        )
+    return notes
+
+
 def build() -> None:
+    notes = require_learning_notes()
     rebuild()
     # Only this fixed, resolved build directory can ever be cleared.
     if DIST.resolve() != ROOT.resolve() / "dist" or DIST.is_symlink():
@@ -53,7 +64,6 @@ def build() -> None:
         for path in (ROOT / directory).rglob("*"):
             if path.is_file() and not any(p.startswith('.') for p in path.relative_to(ROOT).parts):
                 copy_public(path)
-    notes, _ = collect_notes()
     for note in notes:
         path = ROOT / note["md"]
         copy_public(path)

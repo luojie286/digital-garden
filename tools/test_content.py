@@ -5,11 +5,16 @@ from pathlib import Path
 from unittest.mock import patch
 
 import learning_content as content
-from build_site import local_images, DIST
+from build_site import local_images, DIST, require_learning_notes
 from rebuild_content import ROOT
 
 
 class NoteDiscoveryTests(unittest.TestCase):
+    def test_missing_learning_checkout_blocks_publication(self):
+        with patch("build_site.collect_notes", return_value=([], [])):
+            with self.assertRaisesRegex(RuntimeError, "git submodule update"):
+                require_learning_notes()
+
     def test_new_subject_order_metadata_and_exclusions(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -51,6 +56,7 @@ class BuildArtifactTests(unittest.TestCase):
     @unittest.skipUnless(DIST.exists(), "Run build_site.py before artifact checks")
     def test_public_artifact(self):
         notes, _ = content.collect_notes()
+        self.assertGreater(len(notes), 0, "The learning repository was not checked out")
         for note in notes:
             source = ROOT / note["md"]
             self.assertTrue((DIST / note["md"]).is_file(), note["md"])

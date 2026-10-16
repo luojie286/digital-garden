@@ -13,9 +13,24 @@
 
 ## 日常更新：只管写 Markdown
 
+`learning/` 是独立的 [学习笔记仓库](https://github.com/luojie286/learning)，通过 Git 子模块接入博客。GitHub Actions 会下载博客所记录的笔记版本。首次克隆博客时使用 `git clone --recurse-submodules <博客仓库地址>`；已经克隆的副本运行 `git submodule update --init --recursive`。
+
 1. 在 `learning/主题目录/` 中新增或编辑 `.md`，例如 `learning/java/37-Redis基础.md`。
 2. 本地双击 **更新内容.bat**，刷新网页即可。只更新学习笔记也可以运行 `python tools/learning_content.py`。
 3. 提交并推送到 GitHub 后，Actions 会重新扫描并发布，无需手动提交生成的数据文件。
+
+因为笔记与博客是两个仓库，修改笔记后的提交顺序是：
+
+```powershell
+git -C learning add .
+git -C learning commit -m "Update learning notes"
+git -C learning push origin main
+git add learning
+git commit -m "Update published learning notes"
+git push origin main
+```
+
+如果直接在 GitHub 的 `learning` 仓库编辑笔记，先在博客目录运行 `git submodule update --remote learning`，然后提交并推送博客中的 `learning` 版本引用。博客只发布已推送的笔记版本，不会提交或覆盖本地未完成的笔记。构建遇到空笔记库会直接报错，避免发布空页面。
 
 新建主题目录会自动出现在知识地图里。`00-` 开头与 `README.md` 作为总览置顶，其他数字前缀决定学习顺序。目录不必在 JavaScript 里登记；如要自定义主题名和介绍，可修改 `tools/learning_content.py` 中的 `SUBJECTS`。
 
