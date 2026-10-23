@@ -1,2 +1,2 @@
-const siteConfig={title:'Roger 数字空间',authorName:'罗杰'};
+const siteConfig={title:'Roger 数字空间',authorName:'罗杰',startDate:'2026-07-14T00:00:00'};
 const projects=[{id:'campus-ordering',title:'园区点餐 · 后端实践',description:'跟随苍穹外卖课程，记录登录鉴权、服务启动与业务实现。项目资料保留原样，实践中的问题与系统课程互相参照。',tags:['Java','Spring Boot','MySQL','Redis'],md:'learning/项目学习/README.md',status:'LEARNING IN PRACTICE'},{id:'digital-garden',title:'数字空间 · 机械纸面',description:'以 Markdown 维护课程、以工程档案记录实践，也为画面和音乐留下一席之地。纯静态页面，持续生长。',tags:['HTML / CSS / JS','Python','Markdown'],status:'WORK IN PROGRESS'}];
