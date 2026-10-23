@@ -90,5 +90,7 @@ function bootstrapPage() {
 }
 document.addEventListener('DOMContentLoaded',()=>{
   const d=document.getElementById('image-dialog');d.querySelector('[data-close-image]').onclick=()=>d.close();d.querySelectorAll('[data-image-step]').forEach(b=>b.onclick=()=>{imageIndex=(imageIndex+Number(b.dataset.imageStep)+imageCollection.length)%imageCollection.length;paintImage();});d.addEventListener('click',e=>{if(e.target===d)d.close();});d.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)&&imageCollection.length>1){imageIndex=(imageIndex+(e.key==='ArrowRight'?1:-1)+imageCollection.length)%imageCollection.length;paintImage();}});
+  document.addEventListener('click',e=>{if(!document.body.classList.contains('nav-open')||!e.target.closest||e.target.closest('#site-nav,#mobile-nav'))return;document.body.classList.remove('nav-open');document.getElementById('mobile-nav')?.setAttribute('aria-expanded','false');});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape'||!document.body.classList.contains('nav-open'))return;document.body.classList.remove('nav-open');document.getElementById('mobile-nav')?.setAttribute('aria-expanded','false');});
   initPlayer();initSoftRouter();bootstrapPage();
 });
