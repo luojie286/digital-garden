@@ -19,3 +19,6 @@ Thumbs.db
 learning/**/资料/
 learning/java练习/
 learning/**/jwt.txt
+
+.local-review/
+content-sources.local.json

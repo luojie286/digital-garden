@@ -4,8 +4,8 @@ cd /d "%~dp0"
 
 echo.
 echo ========================================
-echo   更新内容：扫描学习笔记 / 文章 / 图片 / mp3
-echo   并生成 learning / posts / gallery / music 数据
+echo   更新内容：扫描课程 / 项目资料 / 画作 / 音乐
+echo   并生成 learning / gallery / music 数据
 echo ========================================
 echo.
 

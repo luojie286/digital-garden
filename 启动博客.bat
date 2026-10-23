@@ -1,17 +1,14 @@
 @echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-
-echo.
-echo 正在启动个人博客本地预览...
-echo 地址: http://localhost:5500
-echo 请保持此窗口开着；关掉窗口 = 网站断开
-echo 按 Ctrl+C 可停止服务
-echo.
-
-start "" "http://localhost:5500"
-python -m http.server 5500
-
-echo.
-echo 服务已停止。按任意键关闭窗口...
-pause >nul
+python tools\build_site.py
+if errorlevel 1 (
+  echo 构建失败，请检查 Python 及 requirements.txt 依赖。
+  pause
+  exit /b 1
+)
+echo 地址: http://localhost:5500/dist/
+echo 请保持此窗口开着，按 Ctrl+C 停止服务。
+start "" "http://localhost:5500/dist/"
+python -m http.server 5500 --bind 127.0.0.1
+pause

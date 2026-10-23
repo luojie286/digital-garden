@@ -1,92 +1,26 @@
-/* Markdown is the source; reading state stays in this browser. */
-function getReadingState() {
-  try { return JSON.parse(localStorage.getItem('garden-reading') || '{}') || {}; }
-  catch { return {}; }
-}
-function saveReadingState(state) {
-  try { localStorage.setItem('garden-reading', JSON.stringify(state)); }
-  catch { showToast('浏览器未允许保存阅读记录'); }
-}
-function subjectName(id) { return learningSubjects.find(s => s.id === id)?.name || id; }
-function noteCard(note, state) {
-  return `<a class="glass-card note-card" href="${articleHref(note)}">
-    <div class="note-card-meta"><span class="tag">${escapeHtml(subjectName(note.subject))}</span>
-      <span>${escapeHtml(note.kind)} · ${note.minutes} 分钟</span>
-      ${state[note.md]?.read ? '<span class="read-badge">✓ 已读</span>' : ''}</div>
-    <h3>${escapeHtml(note.title)}</h3><p>${escapeHtml(note.description)}</p>
-    <div class="note-card-bottom"><span>${note.date ? '更新于 ' + formatDate(note.date) : '主题笔记'}</span><span>阅读全文 ↗</span></div>
-  </a>`;
-}
-function renderHomeLearning() {
-  const el = document.getElementById('home-learning');
-  if (!el) return;
-  const state = getReadingState();
-  const last = learningNotes.filter(n => state[n.md]?.visited).sort((a, b) => state[b.md].visited - state[a.md].visited)[0];
-  el.innerHTML = `<div class="section-heading"><div><span class="eyebrow">LEARNING GARDEN</span>
-    <h2>把学过的，慢慢连起来</h2><p>${learningNotes.length} 篇笔记，${learningSubjects.length} 个方向。从一个问题，走进一片知识。</p></div>
-    <a class="pill-link" href="${assetPath('learning.html')}">全部学习笔记 →</a></div>
-    <div class="home-subjects">${learningSubjects.slice(0, 5).map(s => `
-      <a class="glass-card home-subject" href="${assetPath('learning.html')}?subject=${encodeURIComponent(s.id)}">
-        <span class="subject-icon">${s.icon}</span><h3>${escapeHtml(s.name)}</h3><span>${s.count} 篇笔记 ↗</span></a>`).join('')}</div>
-    ${last ? `<a class="continue-reading" href="${articleHref(last)}">继续上次阅读：${escapeHtml(last.title)} →</a>` : ''}`;
-}
-function initLearningLibrary() {
-  const root = document.getElementById('learning-library');
-  if (!root) return;
-  let selected = new URLSearchParams(location.search).get('subject') || '';
-  if (!learningSubjects.some(s => s.id === selected)) selected = '';
-  const state = getReadingState();
-  const readCount = learningNotes.filter(n => state[n.md]?.read).length;
-  root.innerHTML = `<section class="glass-card learning-intro">
-    <div><span class="eyebrow">NOTES, NOT JUST NUMBERS</span><h2>每次学懂一点，就在这里留下一点。</h2>
-    <p>语言基础、计算机原理、算法与项目实践。按主题梳理，也随时回来复习。</p></div>
-    <div class="learning-stats"><div><strong>${learningNotes.length}</strong><span>篇笔记</span></div>
-      <div><strong>${learningSubjects.length}</strong><span>个方向</span></div><div><strong>${readCount}</strong><span>篇已读</span></div></div>
-    </section>
-    <div class="learning-layout"><aside class="glass-card subject-panel"><h2>知识地图</h2><nav id="subject-nav" aria-label="笔记主题"></nav>
-      <p class="reading-hint">阅读记录仅保存在当前浏览器。</p></aside>
-      <section class="notes-section" aria-label="学习笔记列表">
-        <div class="glass-card library-tools"><label class="note-search">⌕ <input id="note-query" type="search" placeholder="搜索标题、知识点或正文…" aria-label="搜索笔记正文"></label>
-          <div class="library-selects"><label>排序 <select id="note-sort"><option value="topic">学习顺序</option><option value="recent">最近更新</option><option value="title">标题顺序</option></select></label>
-          <label>状态 <select id="note-status"><option value="all">全部笔记</option><option value="unread">未读</option><option value="read">已读</option></select></label></div></div>
-        <div class="notes-heading"><div><h2 id="notes-title"></h2><p id="notes-description"></p></div><span id="notes-count" aria-live="polite"></span></div>
-        <div id="notes-results" class="notes-grid"></div>
-      </section></div>`;
-  const nav = root.querySelector('#subject-nav');
-  function updateUrl() {
-    const url = new URL(location.href);
-    if (selected) url.searchParams.set('subject', selected); else url.searchParams.delete('subject');
-    history.replaceState(history.state, '', url);
+const STORAGE_KEY='mechanical-paper-records-v2';
+function readStorage(){try{const v=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(v?.version===2&&v.reading&&v.review&&v.preferences)return v;}catch{}let legacy={};try{legacy=JSON.parse(localStorage.getItem('garden-reading')||'{}');}catch{}return {version:2,reading:legacy||{},review:{},preferences:{},last:null};}
+function writeStorage(value){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(value));return true;}catch{showToast('浏览器未能保存记录，请导出备份');return false;}}
+function getReadingState(){return readStorage().reading;}
+function saveReadingState(reading){const s=readStorage();s.reading=reading;writeStorage(s);}
+function subjectName(id){return learningSubjects.find(s=>s.id===id)?.name||id;}
+function articleHref(item){return assetPath('article.html')+'?md='+encodeURIComponent(item.md);}
+function highlightText(text,q){const safe=escapeHtml(text);if(!q)return safe;const escaped=escapeHtml(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return safe.replace(new RegExp(escaped,'ig'),x=>'<mark>'+x+'</mark>');}
+function matchSnippet(note,query){if(!query)return {text:note.description,anchor:''};const block=(note.outline||[]).find(b=>(b.title+' '+b.text).toLowerCase().includes(query));const text=block?.text||note.description;const at=Math.max(0,text.toLowerCase().indexOf(query));return {text:(at>35?'…':'')+text.slice(Math.max(0,at-35),at+125)+(text.length>at+125?'…':''),anchor:block?.anchor||''};}
+function noteCard(note,q=''){const state=getReadingState(),progress=state[note.id]||state[note.md]||{},snippet=matchSnippet(note,q);return `<a class="note-row" href="${articleHref(note)}${q?'&q='+encodeURIComponent(q):''}${snippet.anchor?'#'+encodeURIComponent(snippet.anchor):''}"><span class="record-number">${String(Math.max(1,note.order)).padStart(2,'0')}</span><div><span class="eyebrow">${escapeHtml(subjectName(note.subject))} / ${escapeHtml(note.kind)}</span><h3>${highlightText(note.title,q)}</h3><p>${highlightText(snippet.text,q)}</p></div><div class="note-tail"><span>${note.minutes} MIN READ</span><span>${progress.read?'✓ 已读':formatDate(note.date)}</span><span>阅读全文 ↗</span></div></a>`;}
+function exportRecords(){const blob=new Blob([JSON.stringify(readStorage(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='roger-reading-records.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+function validatedRecords(value){if(!value||value.version!==2||typeof value.reading!=='object'||typeof value.review!=='object'||!value.reading||!value.review)throw new Error('记录格式不正确');const reading={},review={},preferences={};const ids=new Set(learningNotes.flatMap(n=>[n.id,n.md]));const questionIds=new Set(learningNotes.flatMap(n=>n.questions.map(q=>q.id)));for(const [id,v] of Object.entries(value.reading)){if(!ids.has(id)||!v||typeof v!=='object')continue;reading[id]={read:v.read===true,visited:Number.isFinite(v.visited)?Math.max(0,v.visited):0,ratio:Number.isFinite(v.ratio)?Math.min(1,Math.max(0,v.ratio)):0,anchor:typeof v.anchor==='string'?v.anchor.slice(0,200):''};}for(const [id,v]of Object.entries(value.review))if(questionIds.has(id)&&typeof v==='boolean')review[id]=v;const p=value.preferences||{};if([16,18,20].includes(p.size))preferences.size=p.size;if([1.7,1.85,2].includes(p.line))preferences.line=p.line;if([680,760,880].includes(p.width))preferences.width=p.width;return {reading,review,preferences};}
+function importRecords(){const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.onchange=async()=>{try{const file=input.files[0];if(!file)return;if(file.size>1024*1024)throw new Error('文件超过 1 MB');const v=validatedRecords(JSON.parse(await file.text())),old=readStorage();old.reading={...old.reading,...v.reading};old.review={...old.review,...v.review};old.preferences={...old.preferences,...v.preferences};writeStorage(old);showToast('记录已合并到当前浏览器');if(document.getElementById('app').dataset.view==='learning')initLearningLibrary();}catch(e){showToast('导入失败：'+e.message);}};input.click();}
+function initLearningLibrary(){
+  const app=document.getElementById('app'),params=new URLSearchParams(location.search);let selected=params.get('subject')||'',mode=params.get('mode')==='review'?'review':'learn';if(!learningSubjects.some(s=>s.id===selected))selected='';let query=params.get('q')||'',status='all',chapter='';
+  app.innerHTML=pageHeading('KNOWLEDGE ARCHIVE / LEARNING','学习档案','从理解一个概念，到把它放进真实世界。')+`<div class="learning-summary"><p>按先修关系连接知识，以实际问题检验理解。<br>学习与复习可以切换，记录留在你自己的浏览器里。</p><div class="summary-numbers"><div><strong>${learningSubjects.filter(s=>s.id!=='projects').length}</strong><span>COURSES</span></div><div><strong>${learningNotes.length}</strong><span>CHAPTERS / NOTES</span></div><div><strong>${learningNotes.reduce((n,x)=>n+x.questions.length,0)}</strong><span>QUESTIONS</span></div></div></div><div class="library-layout"><aside class="course-sidebar"><h2>知识路径</h2><nav id="subject-nav" aria-label="课程选择"></nav><div class="review-tools"><button id="export-records">导出记录 ↗</button><button id="import-records">导入记录</button></div><p class="storage-hint">仅本机保存。导入会合并现有记录；建议定期导出备份。</p></aside><section class="library-content"><div class="mode-tabs"><button data-mode="learn">学习模式</button><button data-mode="review">问题复习</button></div><div class="toolbar"><label class="search-input">⌕ <input id="note-query" type="search" aria-label="搜索标题、正文和面试问题" placeholder="搜索知识点、代码或问题…" value="${escapeHtml(query)}"></label><label>状态 <select id="note-status"></select></label><label id="chapter-filter">章节 <select id="review-chapter"><option value="">全部章节</option></select></label></div><div class="notes-heading"><div><h2 id="notes-title"></h2><p id="notes-description"></p></div><span id="notes-count" aria-live="polite"></span></div><div id="prerequisites"></div><div id="notes-results"></div></section></div>`;
+  function updateUrl(){const u=new URL(location.href);for(const[k,v]of Object.entries({subject:selected,mode:mode==='review'?'review':'',q:query}))v?u.searchParams.set(k,v):u.searchParams.delete(k);history.replaceState(history.state,'',u);currentRoute=location.pathname+location.search;}
+  function controls(){app.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));app.querySelector('#note-status').innerHTML=(mode==='review'?[['all','全部问题'],['pending','待复习'],['mastered','已掌握']]:[['all','全部章节'],['unread','未读'],['read','已读']]).map(([v,t])=>`<option value="${v}">${t}</option>`).join('');app.querySelector('#chapter-filter').hidden=mode!=='review';app.querySelector('#review-chapter').innerHTML='<option value="">全部章节</option>'+learningNotes.filter(n=>(!selected||n.subject===selected)&&n.questions.length).map(n=>`<option value="${escapeHtml(n.id)}">${escapeHtml(n.title)}</option>`).join('');}
+  function render(){const s=readStorage(),subject=learningSubjects.find(x=>x.id===selected),q=query.trim().toLowerCase();app.querySelector('#subject-nav').innerHTML=[{id:'',name:'全部档案',count:learningNotes.length},...learningSubjects].map(x=>`<button data-subject="${x.id}" class="${x.id===selected?'active':''}" aria-pressed="${x.id===selected}"><span>${escapeHtml(x.name)}</span><span>${x.count}</span></button>`).join('');app.querySelector('#notes-title').textContent=subject?.name||(mode==='review'?'面试问题库':'全部学习档案');app.querySelector('#notes-description').textContent=subject?.description||(mode==='review'?'只有问题，没有答案。用自己的话，把理解说清楚。':'从课程入口开始，也可以直接搜索一个具体的问题。');app.querySelector('#prerequisites').innerHTML=subject?.prerequisites?.length?`<p class="prerequisites">建议先学：${subject.prerequisites.map(id=>`<a href="${assetPath('learning.html')}?subject=${id}">${escapeHtml(subjectName(id))}</a>`).join(' / ')}</p>`:'';
+    const notes=learningNotes.filter(n=>(!selected||n.subject===selected)&&(!q||(n.title+' '+n.searchText).toLowerCase().includes(q)));
+    if(mode==='learn'){const filtered=notes.filter(n=>status==='all'||(status==='read'?s.reading[n.id]?.read||s.reading[n.md]?.read:!(s.reading[n.id]?.read||s.reading[n.md]?.read)));app.querySelector('#notes-count').textContent=filtered.length+' 篇';app.querySelector('#notes-results').className='note-list';app.querySelector('#notes-results').innerHTML=filtered.map(n=>noteCard(n,q)).join('')||emptyState('没有符合条件的章节','调整关键词、课程或阅读状态试试。');}
+    else{const questions=learningNotes.filter(n=>(!selected||n.subject===selected)&&(!chapter||n.id===chapter)).flatMap(n=>n.questions.map(question=>({note:n,...question}))).filter(x=>(!q||(x.note.title+' '+x.text).toLowerCase().includes(q))&&(status==='all'||(status==='mastered'?s.review[x.id]:!s.review[x.id])));app.querySelector('#notes-count').textContent=questions.length+' 个问题';app.querySelector('#notes-results').className='question-list';app.querySelector('#notes-results').innerHTML=questions.map((x,i)=>`<article class="review-question"><header><a class="eyebrow" href="${articleHref(x.note)}#${encodeURIComponent('模拟面试问题')}">${escapeHtml(subjectName(x.note.subject))} / ${escapeHtml(x.note.title)} ↗</a><span class="data-label">Q.${String(i+1).padStart(3,'0')}</span></header><h3>${highlightText(x.text,q)}</h3><label><input data-question="${x.id}" type="checkbox" ${s.review[x.id]?'checked':''}>${s.review[x.id]?'已掌握 · 可取消':'待复习 · 标记掌握'}</label></article>`).join('')||emptyState(selected==='projects'?'项目原文不设复习问题':'没有符合条件的问题',selected==='projects'?'按要求保留项目学习正文，未追加面试问题。':'更换筛选条件，或切回学习模式阅读。');app.querySelectorAll('[data-question]').forEach(c=>c.onchange=()=>{const state=readStorage();state.review[c.dataset.question]=c.checked;writeStorage(state);render();});}
   }
-  function render() {
-    nav.innerHTML = [{id: '', name: '全部笔记', icon: '📚', count: learningNotes.length}, ...learningSubjects].map(s =>
-      `<button type="button" data-subject="${escapeHtml(s.id)}" class="subject-button ${selected === s.id ? 'active' : ''}" aria-pressed="${selected === s.id}">
-        <span>${s.icon} ${escapeHtml(s.name)}</span><span>${s.count}</span></button>`).join('');
-    const subject = learningSubjects.find(s => s.id === selected);
-    root.querySelector('#notes-title').textContent = subject?.name || '全部笔记';
-    root.querySelector('#notes-description').textContent = subject?.description || '沿着主题阅读，或者从一个关键词开始。';
-    const query = root.querySelector('#note-query').value.trim().toLowerCase();
-    const status = root.querySelector('#note-status').value;
-    const sort = root.querySelector('#note-sort').value;
-    let notes = learningNotes.filter(n => (!selected || n.subject === selected)
-      && (!query || [n.title, n.description, n.searchText, ...(n.tags || [])].join(' ').toLowerCase().includes(query))
-      && (status === 'all' || (status === 'read' ? state[n.md]?.read : !state[n.md]?.read)));
-    if (sort === 'recent') notes.sort((a, b) => b.date.localeCompare(a.date) || a.order - b.order);
-    if (sort === 'title') notes.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
-    root.querySelector('#notes-count').textContent = `${notes.length} 篇`;
-    root.querySelector('#notes-results').innerHTML = notes.length ? notes.map(n => noteCard(n, state)).join('')
-      : '<div class="glass-card notes-empty"><h3>这里暂时没有符合条件的笔记</h3><p>试试其他关键词，或者切换主题与阅读状态。</p><button class="pill-link" id="reset-notes">重置筛选</button></div>';
-    root.querySelector('#reset-notes')?.addEventListener('click', () => {
-      selected = ''; root.querySelector('#note-query').value = ''; root.querySelector('#note-status').value = 'all'; updateUrl(); render();
-    });
-  }
-  nav.addEventListener('click', event => {
-    const button = event.target.closest('[data-subject]');
-    if (!button) return;
-    selected = button.dataset.subject; updateUrl(); render();
-  });
-  root.querySelector('#note-query').addEventListener('input', render);
-  root.querySelector('#note-sort').addEventListener('change', render);
-  root.querySelector('#note-status').addEventListener('change', render);
-  render();
+  app.querySelector('#subject-nav').onclick=e=>{const b=e.target.closest('[data-subject]');if(b){selected=b.dataset.subject;status='all';chapter='';controls();updateUrl();render();}};
+  app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;status='all';chapter='';controls();updateUrl();render();});app.querySelector('#note-query').oninput=e=>{query=e.target.value;updateUrl();render();};app.querySelector('#note-status').onchange=e=>{status=e.target.value;render();};app.querySelector('#review-chapter').onchange=e=>{chapter=e.target.value;render();};app.querySelector('#export-records').onclick=exportRecords;app.querySelector('#import-records').onclick=importRecords;controls();render();
 }

@@ -9,6 +9,7 @@ from urllib.parse import unquote, urlsplit
 
 from rebuild_content import ROOT, main as rebuild
 from learning_content import collect_notes
+from public_content import public_markdown
 
 DIST = ROOT / "dist"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp"}
@@ -65,6 +66,7 @@ def fingerprint_page_assets() -> None:
 
         html = page.read_text(encoding="utf-8")
         html = re.sub(r'(<script\b[^>]*\bsrc=["\'])([^"\']+)(["\'])', stamp, html)
+        html = re.sub(r'(<link\b[^>]*\bhref=["\'])([^"\']+)(["\'])', stamp, html)
         page.write_text(html, encoding="utf-8")
 
 
@@ -80,13 +82,14 @@ def build() -> None:
     for path in ROOT.glob("*.html"):
         copy_public(path)
     copy_public(ROOT / "favicon.png")
-    for directory in ("css", "js", "sources", "blog", "fiction", "anime"):
+    for directory in ("css", "js", "sources/img", "sources/music", "sources/gallery-imports/originals", "sources/gallery-imports/thumbnails"):
         for path in (ROOT / directory).rglob("*"):
             if path.is_file() and not any(p.startswith('.') for p in path.relative_to(ROOT).parts):
                 copy_public(path)
     for note in notes:
         path = ROOT / note["md"]
         copy_public(path)
+        (DIST / note['md']).write_text(public_markdown(path.read_text(encoding='utf-8-sig')), encoding='utf-8')
         for image in local_images(path):
             copy_public(image)
     fingerprint_page_assets()
